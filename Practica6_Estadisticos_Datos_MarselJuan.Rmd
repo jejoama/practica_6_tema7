@@ -133,7 +133,7 @@ etc    |
 
 
 ```{r Solucion_Ej3, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
-pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% group_by(asignatura) %>% summarise(mean=mean(valor, na.rm=T), sd = sd(valor, na.rm=T), IQR = IQR(valor, na.rm=T), median = median(valor, na.rm=T))
+pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% group_by(asignatura) %>% summarise(mean=mean(valor, na.rm=T), sd = sd(valor, na.rm=T), iqr = IQR(valor, na.rm=T), median = median(valor, na.rm=T))
   
 
 ```
@@ -146,7 +146,7 @@ Representa gráficamente la curva de notas de la asignatura ALG estimando la dis
   - Compara el resultado con la media de las notas para esa asignatura. Puedes marcar dicha media en el gráfico con `geom_point` o con `geom_vline()` especificando el parámetro `xintercept`.
 
 ```{r Solucion_Ej4, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
-pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="ALG.num") %>% ggplot(aes(valor)) + geom_histogram(aes(y=stat(density))) + geom_density() + geom_vline(aes(xintercept = mean(valor)), color="red", size=15)
+pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="ALG.num") %>% ggplot(aes(valor)) + geom_histogram(aes(y=stat(density))) + geom_density() + geom_vline(aes(xintercept = mean(valor, na.rm = T)), color="red", size=1)
 ```
 
 ## Ejercicio 5: Test de normalidad de la distribución de datos
@@ -155,7 +155,9 @@ Compara la distribución de probabilidad de las notas de la asignatura ANM con l
 
 ```{r Solucion_Ej5, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
 library(car)
-valores <-  datos %>% pivot_longer(cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="AMM.num")
+library(tidyverse)
+valores <-  datos %>% pivot_longer(cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="AMM.num", !is.na(valor), is.finite(valor))
+
 
 qqPlot(valores$valor)
 ```
@@ -171,7 +173,12 @@ Vamos a calcular la frecuencia de cada valor en las variables categóricas de ca
   * Representa la tabla de contingencia usando `mosaicplot`.
 
 ```{r Solucion_Ej6, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
+AL<-table(datos$ALG.cat)
+AL
+ALGyANM<-table(datos$ALG.cat,datos$ANM.cat)
+ALGyANM
 
+mosaicplot(x = ALGyANM,xlab = "Nota ALG",ylab="Nota ANM")
 
 ```
 
@@ -183,7 +190,9 @@ Vamos a calcular la frecuencia de cada valor en las variables categóricas de ca
   * Compara los resultados para el coeficiente de correlación de Pearson (para variables numéricas) y de Spearman (para variables numéricas ordinales).
 
 ```{r Solucion_Ej7, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
+datos %>% select(ends_with(".num")) %>% cor(use = "complete.obs", method="pearson")
 
+datos %>% select(ends_with(".num")) %>% cor(use = "complete.obs", method="spearman")
 ```
 
 La correlación de Pearson sirve para cuando la relación entre dos variables es lineal, mientras que la de Spearman es robusta frente a relaciones no lineales en datos ordenados.
@@ -202,6 +211,32 @@ Dibuja las matrices de correlación del conjunto de notas numéricas.
 Podemos usar `pairs` del paquete base o bien `ggcorr` y `ggpairs` de la librería `GGally`.
 
 ```{r Solucion_Ej8, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
+library(tidyverse)
+library(GGally)
+
+# Seleccionar solo las columnas numéricas de notas
+notas <- datos %>% select(ends_with(".num"))
+
+# 1. Matriz de covarianza (no acotada)
+covarianza <- cov(notas, use = "complete.obs")
+print("Matriz de covarianza:")
+print(covarianza)
+
+# 2. Matriz de correlación de Pearson (lineal)
+cor_pearson <- cor(notas, use = "complete.obs", method = "pearson")
+print("Matriz de correlación de Pearson:")
+print(cor_pearson)
+
+# 3. Matriz de correlación de Spearman (rangos)
+cor_spearman <- cor(notas, use = "complete.obs", method = "spearman")
+print("Matriz de correlación de Spearman:")
+print(cor_spearman)
+
+# 4. Visualización con pairs() (base R)
+pairs(notas, main = "Matriz de dispersión (pairs)")
+
+# 5. Visualización con ggpairs() (GGally)
+ggpairs(notas, title = "Matriz de correlación con GGally")
 
 ```
 
