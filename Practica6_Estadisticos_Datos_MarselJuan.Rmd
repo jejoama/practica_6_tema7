@@ -133,10 +133,8 @@ etc    |
 
 
 ```{r Solucion_Ej3, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
-
-
-
-
+pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% group_by(asignatura) %>% summarise(mean=mean(valor, na.rm=T), sd = sd(valor, na.rm=T), IQR = IQR(valor, na.rm=T), median = median(valor, na.rm=T))
+  
 
 ```
 
@@ -148,7 +146,7 @@ Representa gráficamente la curva de notas de la asignatura ALG estimando la dis
   - Compara el resultado con la media de las notas para esa asignatura. Puedes marcar dicha media en el gráfico con `geom_point` o con `geom_vline()` especificando el parámetro `xintercept`.
 
 ```{r Solucion_Ej4, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
-
+pivot_longer(datos, cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="ALG.num") %>% ggplot(aes(valor)) + geom_histogram(aes(y=stat(density))) + geom_density() + geom_vline(aes(xintercept = mean(valor)), color="red", size=15)
 ```
 
 ## Ejercicio 5: Test de normalidad de la distribución de datos
@@ -156,7 +154,10 @@ Representa gráficamente la curva de notas de la asignatura ALG estimando la dis
 Compara la distribución de probabilidad de las notas de la asignatura ANM con la de una Gaussiana empleando la función `qqPlot` (quantile-quantile plot) de la librería `car`, que representa gráficamente los cuantiles de la distribución analizada respecto de los de una distribución normal (Gaussiana).
 
 ```{r Solucion_Ej5, include=TRUE, echo=TRUE, eval=TRUE, results=TRUE}
+library(car)
+valores <-  datos %>% pivot_longer(cols=ends_with(".num"), names_to = "asignatura", values_to = "valor") %>% filter(asignatura=="AMM.num")
 
+qqPlot(valores$valor)
 ```
 
 # Análisis univariante de variables categóricas
